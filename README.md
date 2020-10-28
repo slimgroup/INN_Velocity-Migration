@@ -4,7 +4,7 @@ This code base is using the Julia Language and [DrWatson](https://juliadynamics.
 to make a reproducible scientific project named
 > INN_Velocity-Migration
 
-It is authored by Yuxiao Ren, Philipp Witte and Ali Siahkoohi.
+It is authored by Yuxiao Ren (ryxchina@gmail.com).
 
 To (locally) reproduce this project, do the following:
 
