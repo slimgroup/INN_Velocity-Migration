@@ -5,6 +5,8 @@ using JLD, PyPlot, LinearAlgebra, Statistics, JUDI.TimeModeling
 include(srcdir("plot_rtm.jl"))
 
 ####################################################################################################
+# This data is available in the SLIM dropbox folder at 
+# https://www.dropbox.com/sh/koxgvxuzg838s9x/AADivZzhLafitt4Q06XRWhYGa?dl=0
 D = load(datadir("overthrust_images_train.jld"))
 num = length(D["m"])
 
@@ -57,8 +59,8 @@ save(datadir("overthrust_4k_models_200x64.jld"), "m_all1", m_all1, "m0_all1", m0
 ####################################################################################################
 m_all, m0_all = load(datadir("overthrust_4k_models_200x64.jld"), "m_all1", "m0_all1")
 
-figfolder = "rtm_64x200_lin_vel"
-mkpath(datadir("figs", figfolder))
+figfolder = "figs/rtm_64x200_lin_vel"
+mkpath(datadir(figfolder))
 
 ## Computing RTM images
 i = 1
@@ -82,7 +84,7 @@ figure(figsize=[8,8])
 ax1 = subplot(3, 1, 1); imshow(adjoint(m), cmap="jet"); plt.colorbar(); title(L"True velocity ($s^2/km^2$)")
 ax2 = subplot(3, 1, 2); imshow(adjoint(m0), cmap="jet"); plt.colorbar(); title(L"Migration velocity ($s^2/km^2$)")
 ax3 = subplot(3, 1, 3); imshow(adjoint(dm), cmap="jet"); plt.colorbar(); title(L"Perturbation ($s^2/km^2$)")
-savefig(datadir("figs", figfolder, "vel_example.png"))
+savefig(datadir(figfolder, "vel_example.png"))
 
 # Computing RTM images
 n = size(m)
@@ -142,33 +144,39 @@ J = judiJacobian(Pr * F0 * adjoint(Ps), q) # Born forward modeling operator
 d_obs = Pr * F * adjoint(Ps) * q  # Practical observation data generated on m
 d_syn = Pr * F0 * adjoint(Ps) * q # Synthetic observation data generated on m0
 
+# When the migarion velocity is close to the true velocity
+# m1 = ones(Float32, n) .* m[1,1] # constant velocity
+# model1 = Model(n, d, o, m1; nb=200)
+# F1 = judiModeling(info, model1; options=opt)
+# d_syn = Pr*F1*adjoint(Ps)*q # forward modeling on the constant velocity to mute the direct wave
+
 rtm = adjoint(J) * (d_obs - d_syn)
 
 # rtm = rtm_isic(m, m0)
 rtm1 = adjoint(reshape(rtm, n)) 
 figure(figsize=[8,2]); imshow(rtm1, cmap="gray", vmin=-2e-2, vmax=2e-2); plt.colorbar(); title("RTM_isic result")
-savefig(datadir("figs", figfolder, "rtm.png"))
+savefig(datadir(figfolder, "rtm.png"))
 
 plot_rtm(reshape(rtm, n), d)
-savefig(datadir("figs", figfolder, "rtm1.png"))
+savefig(datadir(figfolder, "rtm1.png"))
 
 figure(figsize=[12,8])
 ax1 = subplot(1,3,1); imshow(d_obs.data[1], vmin=-1, vmax=1, cmap="gray", aspect="auto"); title("d_obs from src1")
 ax2 = subplot(1,3,2); imshow(d_obs.data[11], vmin=-1, vmax=1, cmap="gray", aspect="auto"); title("d_obs from src11")
 ax3 = subplot(1,3,3); imshow(d_obs.data[21], vmin=-1, vmax=1, cmap="gray", aspect="auto"); title("d_obs from src21")
-savefig(datadir("figs", figfolder, "d_obs.png"))
+savefig(datadir(figfolder, "d_obs.png"))
 
 figure(figsize=[12,8])
 ax1 = subplot(1,3,1); imshow(d_syn.data[1], vmin=-1, vmax=1, cmap="gray", aspect="auto"); title("d_syn from src1")
 ax2 = subplot(1,3,2); imshow(d_syn.data[11], vmin=-1, vmax=1, cmap="gray", aspect="auto"); title("d_syn from src11")
 ax3 = subplot(1,3,3); imshow(d_syn.data[21], vmin=-1, vmax=1, cmap="gray", aspect="auto"); title("d_syn from src21")
-savefig(datadir("figs", figfolder, "d_syn.png"))
+savefig(datadir(figfolder, "d_syn.png"))
 
 figure(figsize=[12,8])
 ax1 = subplot(1,3,1); imshow(d_obs.data[1]-d_syn.data[1], vmin=-1, vmax=1, cmap="gray", aspect="auto"); title("d_diff from src1")
 ax2 = subplot(1,3,2); imshow(d_obs.data[11]-d_syn.data[11], vmin=-1, vmax=1, cmap="gray", aspect="auto"); title("d_diff from src11")
 ax3 = subplot(1,3,3); imshow(d_obs.data[21]-d_syn.data[21], vmin=-1, vmax=1, cmap="gray", aspect="auto"); title("d_diff from src21")
-savefig(datadir("figs", figfolder, "d_diff.png"))
+savefig(datadir(figfolder, "d_diff.png"))
 
 
 # Right-hand preconditioners (model topmute)
@@ -185,10 +193,10 @@ Mr = S * Tm
 rtm = Mr' * rtm # mute water layers
 rtm2 = adjoint(reshape(rtm, n)) 
 figure(figsize=[8,2]); imshow(rtm2, cmap="gray", vmin=-2e-2, vmax=2e-2); plt.colorbar(); title("RTM_isic result with topmute")
-savefig(datadir("figs", figfolder, "rtm_TopMute.png"))
+savefig(datadir(figfolder, "rtm_TopMute.png"))
 
 plot_rtm(reshape(rtm, n), d)
-savefig(datadir("figs", figfolder, "rtm2.png"))
+savefig(datadir(figfolder, "rtm2.png"))
 
 figure(figsize=[8,2]); imshow(rtm1 - rtm2, cmap="gray", vmin=-2e-2, vmax=2e-2); plt.colorbar(); title("Difference of RTM_isic results")
-savefig(datadir("figs", figfolder, "rtm_difference.png"))
+savefig(datadir(figfolder, "rtm_difference.png"))

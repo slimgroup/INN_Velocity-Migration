@@ -93,7 +93,7 @@ module FWI_64x200
 
 
         ####################################################################################################
-        # FWI using Stochastic gradient decent method
+        ## FWI using Stochastic gradient decent method
         # Optimization parameters
         # batchsize = 10
         # fhistory_SGD = zeros(Float32, niterations)
@@ -120,7 +120,7 @@ module FWI_64x200
 
 
         ####################################################################################################
-        # FWI using Gauss-Newton method
+        ## FWI using Gauss-Newton method
         # Optimization parameters
         maxiter_GN = 1
         fhistory_GN = zeros(Float32, niterations)

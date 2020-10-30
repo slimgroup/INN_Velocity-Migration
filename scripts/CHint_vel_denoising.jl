@@ -13,10 +13,8 @@ Random.seed!(666)
 
 
 ####################################################################################################
-
 # Load original data X (size of n1 x n2 x nc x ntrain)
-X_orig = load("../../data/vel_4k_samples_64x200_lin_vel.jld")["m_all"]
-# Y_orig = load("../../data/rtm_4k_samples_64x200_lin_vel.jld")["rtm1_all"]
+X_orig = load(datadir("vel_4k_samples_64x200_lin_vel.jld"), "m_all")
 X_orig = Float32.(X_orig)
 n1, n2, nc, nsamples = size(X_orig)
 AN = ActNorm(nsamples)
@@ -68,6 +66,8 @@ lr_step = 100
 lr_decay_fn = Flux.ExpDecay(1f-3, .9, lr_step, 0.)
 fval = zeros(Float32, maxiter)
 
+t1 = now()
+println(string("Training starts at ", t1))
 for j=1:maxiter
 
     # Evaluate objective and gradients
@@ -88,11 +88,13 @@ for j=1:maxiter
 end
 CH = CH |>cpu
 
+t2 = now()
+println(string("Training finishes after ", Dates.value.(t2-t1)/3600000, " hours"))
 
 ####################################################################################################
-# Plotting
-figfolder = string("Denoising_", maxiter, "_", depth, "_", batchsize)
-mkpath(joinpath(pwd(), "figs", figfolder))
+## Plotting
+figfolder = string("chint/Denoising_", maxiter, "_", depth, "_", batchsize)
+mkpath(plotsdir(figfolder))
 
 # Testing
 test_size = 100
@@ -140,7 +142,7 @@ ax5 = subplot(2,4,5); imshow(Zx_[:, :, 1, 1], cmap="jet", aspect="auto"); title(
 ax6 = subplot(2,4,6); imshow(Zy_[:, :, 1, 1], cmap="jet", aspect="auto"); title(L"Latent space: $zy = f(x|y)$")
 ax7 = subplot(2,4,7); imshow(Zx[:, :, 1, 1], cmap="jet", aspect="auto"); title(L"Latent space: $zx \sim \hat{p}_{zx}$")
 ax8 = subplot(2,4,8); imshow(Zy[:, :, 1, 1], cmap="jet", aspect="auto"); title(L"Latent space: $zy \sim \hat{p}_{zy}$")
-savefig(string("./figs/", figfolder, "/general.png"))
+savefig(plotsdir(figfolder, "general.png"))
 
 # Plot various samples from X and Y
 figure(figsize=[16,8])
@@ -153,7 +155,7 @@ ax5 = subplot(2,4,5); imshow(X[:, :, 1, i[1]], cmap="jet", aspect="auto"); title
 ax6 = subplot(2,4,6); imshow(X[:, :, 1, i[2]], cmap="jet", aspect="auto"); title(L"Model space: $x \sim \hat{p}_x$")
 ax7 = subplot(2,4,7); imshow(X[:, :, 1, i[3]], cmap="jet", aspect="auto"); title(L"Model space: $x \sim \hat{p}_x$")
 ax8 = subplot(2,4,8); imshow(X[:, :, 1, i[4]], cmap="jet", aspect="auto"); title(L"Model space: $x \sim \hat{p}_x$")
-savefig(string("./figs/", figfolder, "/model_space_samples.png"))
+savefig(plotsdir(figfolder, "model_space_samples.png"))
 
 # Plot posterior samples, mean and standard deviation
 figure(figsize=[16,8])
@@ -168,8 +170,8 @@ ax6 = subplot(2,4,6); imshow(X_post[:, :, 1, 4], cmap="jet", aspect="auto"); tit
 ax7 = subplot(2,4,7); imshow(X_post[:, :, 1, 5], cmap="jet", aspect="auto"); title(L"Post. sample: $x = f(zx|zy_{fix})^{-1}$")
 ax8 = subplot(2,4,8); imshow(X_post_std[:, :, 1,1], cmap="binary", aspect="auto", vmin=0, vmax=0.9*maximum(X_post_std)); 
 colorbar(); title("Posterior std");
-savefig(string("./figs/", figfolder, "/posterior_samples.png"))
+savefig(plotsdir(figfolder, "posterior_samples.png"))
 
-
+# Plot loss values
 figure(); plot(1:maxiter, fval[1:maxiter]); title("loss values")
-savefig(string("./figs/", figfolder, "/loss_curve.png"))
+savefig(plotsdir(figfolder, "loss_curve.png"))

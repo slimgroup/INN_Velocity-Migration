@@ -13,7 +13,6 @@ Random.seed!(666)
 
 
 ####################################################################################################
-
 # Load original data X (size of n1 x n2 x nc x ntrain)
 X_orig = load(datadir("vel_4k_samples_64x200_lin_vel.jld"), "m_all")
 Y_orig = load(datadir("vel_4k_samples_64x200_lin_vel.jld"), "rtm1_all")
@@ -115,8 +114,8 @@ println(string("Training finishes after ", Dates.value.(t2-t1)/3600000, " hours"
 # test1 for vel + rtm_mig_vel
 # test2 for vel + rtm_const_vel
 # test3 for vel + rtm_lin_vel
-figfolder = string("test3_", maxiter, "_", depth, "_", batchsize)
-mkpath(plotsdir("chint", figfolder))
+figfolder = string("chint/test3_", maxiter, "_", depth, "_", batchsize)
+mkpath(plotsdir(figfolder))
 
 # Testing
 test_size = 100
@@ -146,7 +145,7 @@ for idx = 1:10
     Zy_fixed = wavelet_unsqueeze(Zy_fixed)
     X_post = wavelet_unsqueeze(X_post)
 
-    save(plotsdir("chint", figfolder, "/posterior_samples", idx, ".jld"), "X_fixed", X_fixed, "Y_fixed", Y_fixed, "X_post", X_post, "Zy_fixed", Zy_fixed)
+    save(plotsdir(figfolder, string("posterior_samples", idx, ".jld")), "X_fixed", X_fixed, "Y_fixed", Y_fixed, "X_post", X_post, "Zy_fixed", Zy_fixed)
 
     # Plot posterior samples, mean and standard deviation
     figure(figsize=[20,8])
@@ -162,7 +161,7 @@ for idx = 1:10
     ax8 = subplot(2,4,8); imshow(X_post_std[:, :, 1,1], cmap="binary", aspect="auto", vmin=0, vmax=0.9*maximum(X_post_std)); 
     colorbar(); title("Posterior std");
 
-    savefig(plotsdir("chint", figfolder, "/posterior_samples", idx, ".png"))
+    savefig(plotsdir(figfolder, string("posterior_samples", idx, ".png") ))
 
 end
 
@@ -192,7 +191,7 @@ ax5 = subplot(2,4,5); imshow(Zx_[:, :, 1, 1], cmap="jet", aspect="auto"); colorb
 ax6 = subplot(2,4,6); imshow(Zy_[:, :, 1, 1], cmap="jet", aspect="auto"); colorbar(); title(L"Latent space: $zy = f(x|y)$")
 ax7 = subplot(2,4,7); imshow(Zx[:, :, 1, 1], cmap="jet", aspect="auto"); colorbar(); title(L"Latent space: $zx \sim \hat{p}_{zx}$")
 ax8 = subplot(2,4,8); imshow(Zy[:, :, 1, 1], cmap="jet", aspect="auto"); colorbar(); title(L"Latent space: $zy \sim \hat{p}_{zy}$")
-savefig(plotsdir("chint", figfolder, "/general.png"))
+savefig(plotsdir(figfolder, "general.png"))
 
 # Plot various samples from X and Y
 figure(figsize=[20,8])
@@ -205,9 +204,8 @@ ax5 = subplot(2,4,5); imshow(X[:, :, 1, i[1]], cmap="jet", aspect="auto"); color
 ax6 = subplot(2,4,6); imshow(X[:, :, 1, i[2]], cmap="jet", aspect="auto"); colorbar(); title(L"Model space: $x \sim \hat{p}_x$")
 ax7 = subplot(2,4,7); imshow(X[:, :, 1, i[3]], cmap="jet", aspect="auto"); colorbar(); title(L"Model space: $x \sim \hat{p}_x$")
 ax8 = subplot(2,4,8); imshow(X[:, :, 1, i[4]], cmap="jet", aspect="auto"); colorbar(); title(L"Model space: $x \sim \hat{p}_x$")
-savefig(plotsdir("chint", figfolder, "/model_space_samples.png"))
+savefig(plotsdir(figfolder, "model_space_samples.png"))
 
 # Plot loss values
 figure(); plot(1:maxiter, fval[1:maxiter]); title("loss values")
-savefig(plotsdir("chint", figfolder, "/loss_curve.png"))
-
+savefig(plotsdir(figfolder, "loss_curve.png"))

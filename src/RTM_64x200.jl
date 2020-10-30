@@ -63,9 +63,16 @@ module RTM_64x200
         Ps = judiProjection(info, srcGeometry)
         J = judiJacobian(Pr*F0*adjoint(Ps), q) # Born forward modeling operator
 
-        # Forward modeling and RTM
+        ####################################################################################################
+        ## Forward modeling and RTM
         d_obs = Pr*F*adjoint(Ps)*q  # Practical observation data generated on m
         d_syn = Pr*F0*adjoint(Ps)*q # Synthetic observation data generated on m0
+
+        # When the migarion velocity is close to the true velocity
+        # m1 = ones(Float32, n) .* m[1,1] # constant velocity
+        # model1 = Model(n, d, o, m1; nb=200)
+        # F1 = judiModeling(info, model1; options=opt)
+        # d_syn = Pr*F1*adjoint(Ps)*q # forward modeling on the constant velocity to mute the direct wave
 
         rtm = adjoint(J) * (d_obs - d_syn)
 
