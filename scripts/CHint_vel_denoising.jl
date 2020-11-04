@@ -60,31 +60,43 @@ function loss(CH, X, Y)
 end
 
 # Training
-maxiter = 1000
+max_epoch = 100
+max_iter = floor(Int, ntrain/batchsize)
 opt = Flux.ADAM(1f-3)
 lr_step = 100
 lr_decay_fn = Flux.ExpDecay(1f-3, .9, lr_step, 0.)
-fval = zeros(Float32, maxiter)
+losses = zeros(Float32, max_epoch*max_iter)
+fval = zeros(Float32, max_epoch)
 
 t1 = now()
 println(string("Training starts at ", t1))
-for j=1:maxiter
+for i=1:max_epoch
 
-    # Evaluate objective and gradients
-    idx = randperm(ntrain)[1:batchsize]
-    X = X_train[:, :, :, idx] |>gpu
-    Y = X + .5f0*randn(Float32, nx, ny, n_in, batchsize) |>gpu
-    
-    fval[j] = loss(CH, X, Y)[1]
-    mod(j, 100) == 0 && (print("Iteration: ", j, "; f = ", fval[j], "; at ", now(), "\n"))
-    GC.gc()
+    index = randperm(ntrain)
 
-    # Update params
-    for p in Params
-        update!(opt, p.data, p.grad)
-        update!(lr_decay_fn, p.data, p.grad)
+    for j=1:max_iter
+
+        # Evaluate objective and gradients
+        idx = index[(j-1)*batchsize + 1 : j*batchsize]
+        X = X_train[:, :, :, idx] 
+        Y = X + .5f0*randn(Float32, nx, ny, n_in, batchsize)
+        X = X |>gpu
+        Y = Y |>gpu
+        
+        losses[(i-1)*max_iter + j] = loss(CH, X, Y)[1]
+        GC.gc()
+
+        # Update params
+        for p in Params
+            update!(opt, p.data, p.grad)
+            update!(lr_decay_fn, p.data, p.grad)
+        end
+        clear_grad!(CH)
     end
-    clear_grad!(CH)
+
+    fval[i] = losses[i*max_iter]
+    mod(i, 10) == 0 && (print("Epoch: ", i, "; f = ", fval[i], "; at ", now(), "\n"))
+    
 end
 CH = CH |>cpu
 
@@ -93,8 +105,10 @@ println(string("Training finishes after ", Dates.value.(t2-t1)/3600000, " hours"
 
 ####################################################################################################
 ## Plotting
-figfolder = string("chint/Denoising_", maxiter, "_", depth, "_", batchsize)
+figfolder = string("chint/Denoising_", max_epoch, "_", depth, "_", batchsize)
 mkpath(plotsdir(figfolder))
+
+save(plotsdir(figfolder, "chint.jld"), "CH", CH, "losses", losses, "fval", fval)
 
 # Testing
 test_size = 100
@@ -173,5 +187,5 @@ colorbar(); title("Posterior std");
 savefig(plotsdir(figfolder, "posterior_samples.png"))
 
 # Plot loss values
-figure(); plot(1:maxiter, fval[1:maxiter]); title("loss values")
+figure(); plot(1:max_epoch, fval[1:max_epoch]); title("loss values")
 savefig(plotsdir(figfolder, "loss_curve.png"))

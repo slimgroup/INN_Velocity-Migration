@@ -66,15 +66,22 @@ module RTM_64x200
         ####################################################################################################
         ## Forward modeling and RTM
         d_obs = Pr*F*adjoint(Ps)*q  # Practical observation data generated on m
-        d_syn = Pr*F0*adjoint(Ps)*q # Synthetic observation data generated on m0
+        # d_syn = Pr*F0*adjoint(Ps)*q # Synthetic observation data generated on m0
 
         # When the migarion velocity is close to the true velocity
-        # m1 = ones(Float32, n) .* m[1,1] # constant velocity
-        # model1 = Model(n, d, o, m1; nb=200)
-        # F1 = judiModeling(info, model1; options=opt)
-        # d_syn = Pr*F1*adjoint(Ps)*q # forward modeling on the constant velocity to mute the direct wave
+        idx_wb = 9 # index of the water bottom
+        m1 = ones(Float32, n) .* m[1,1] # constant velocity
+        m1[:, idx_wb+1:end] .= m[:, idx_wb+1]
+        model1 = Model(n, d, o, m1; nb=200)
+        F1 = judiModeling(info, model1; options=opt)
+        d_syn = Pr*F1*adjoint(Ps)*q # forward modeling on the constant velocity to mute the direct wave
 
         rtm = adjoint(J) * (d_obs - d_syn)
+
+        # Alternatively using fwi_objective() or lsrtm_objective()
+        # fval, rtm = fwi_objective(model0, q, d_obs; options=opt)
+        # x = zeros(Float32, model0.n) 
+        # fval, rtm = lsrtm_objective(model0, q, d_obs, Mr*x; nlind=true, options=opt) # Mr is a preconditioner like model topmute
 
         return rtm
     end

@@ -44,7 +44,7 @@ test_size = size(X_post)[4] #100
 m0_all = zeros(Float32, n1, n2, test_size)
 rtm_all = zeros(Float32, n1, n2, test_size)
 
-for i = 1:3
+for i = 1:3 #test_size
 
     m0 = X_post[:, :, 1, i]
     m0[1:idx_wb, :] .= m[1,1]

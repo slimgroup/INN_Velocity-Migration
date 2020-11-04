@@ -106,7 +106,7 @@ module FWI_64x200
 
         #     # get fwi objective function value and gradient
         #     i = randperm(d_obs.nsrc)[1:batchsize]
-        #     fval, gradient = fwi_objective(model0, q[i], d_obs[i])
+        #     fval, gradient = fwi_objective(model0, q[i], d_obs[i]; options=opt)
         #     println("FWI iteration no: ", j, "; function value: ", fval)
         #     fhistory_SGD[j] = fval
 
@@ -140,7 +140,7 @@ module FWI_64x200
             # GN update steps
             J1 = J * Mr
             step =  zeros(Float32, n[1]*n[2])
-            lsqr!(step, J1, d_syn - d_obs; maxiter=maxiter_GN, verbose=true)
+            lsqr!(step, J1, d_syn - d_obs; maxiter=maxiter_GN, verbose=false)
 
             # update model and bound constraints
             model0.m = proj(model0.m - reshape(step, model0.n))  # alpha=1
